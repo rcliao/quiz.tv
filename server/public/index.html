@@ -1,0 +1,24 @@
+<head>
+    <title>Quiz.tv</title>
+    <meta name="viewport" content="user-scalable=no, width=1920, height=1080">
+
+    <link rel="stylesheet" href="app.css">
+
+    <script src="/socket.io/socket.io.js"></script>
+
+    <script src="app.js"></script>
+</head>
+
+<body onload="init()">
+    <div class="overlay" id="overlay">
+        <div id="countdown"></div>
+        <div class="question" id="question">
+            <p class="description" id="question_description"></p>
+            <div class="answers" id="answers">
+            </div>
+        </div>
+        <div class="feedback" id="feedback">
+            <p class="description" id="feedback_description"></p>
+        </div>
+    </div>
+</body>

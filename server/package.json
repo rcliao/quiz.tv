@@ -1,0 +1,17 @@
+{
+  "name": "tv-websockets",
+  "version": "0.0.1",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "DIRECTV",
+  "license": "",
+  "dependencies": {
+    "socket.io": "~1.3.6",
+    "express": "~4.13.3",
+    "hammerjs": "~2.0.4",
+    "jquery": "~2.1.4"
+  }
+}
