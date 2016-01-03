@@ -3,6 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no, width=device-width">
+
     <title></title>
 
     <link href="lib/ionic/css/ionic.css" rel="stylesheet">
@@ -12,6 +13,7 @@
     <link href="css/ionic.app.css" rel="stylesheet">
     -->
 
+    <script src="https://kandy-portal.s3.amazonaws.com/public/javascript/kandy/2.4.2/kandy.js"></script>
     <script src="lib/socket.io-client/socket.io.js"></script>
 
     <!-- ionic/angularjs js -->
@@ -31,16 +33,67 @@
         <h1 class="title">Quiz.tv</h1>
       </ion-header-bar>
       <ion-content ng-controller="QuestionCtrl as ctrl">
-            <div class="list card" ng-if="!ctrl.answerResult && ctrl.currentQuestion">
+            <div class="list card" ng-if="!ctrl.answerResult && ctrl.currentQuestion"
+                ng-hide="ctrl.calling">
                 <div class="item item-text-wrap">
                     <b>{{ctrl.currentQuestion.description}}</b>
                 </div>
 
                 <a href="#" class="item item-icon-left choice"
+                    ng-class="{
+                        'active': ctrl.currentQuestion.choice === $index
+                    }"
                     ng-repeat="answer in ctrl.currentQuestion.answers"
                     ng-click="ctrl.selectAnswer($index)">
                     {{answer.description}}
                 </a>
+
+                <a class="item item-icon-left balanced" href="#"
+                    ng-click="ctrl.submitAnswer()">
+                    <i class="icon ion-android-done"></i>
+                    Submit Answer
+                </a>
+
+                <a href="#" class="item item-icon-left balanced"
+                    ng-click="ctrl.callForHelp()">
+                    <span class="icon ion-android-call"></span>
+                    Call for help
+                </a>
+            </div>
+
+            <div ng-show="ctrl.calling">
+                <div class="video-container">
+                    <div id="local_call"></div>
+                    <div id="remote_call"></div>
+                </div>
+                <div class="list card"
+                    ng-show="ctrl.callIncoming">
+                    <a href="#" class="item item-icon-left"
+                        ng-click="ctrl.pickUpCall()">
+                        <i class="icon ion-android-call"></i>
+                        Pick up incoming call
+                    </a>
+                </div>
+                <div class="list card"
+                    ng-show="ctrl.outCalling">
+                    <a href="#" class="item item-icon-left"
+                        ng-click="ctrl.endCall()">
+                        <i class="icon ion-android-call"></i>
+                        End this call
+                    </a>
+                </div>
+                <div class="list card"
+                    ng-show="!ctrl.outCalling">
+                    <a href="#" class="item item-icon-left"
+                        ng-repeat="user in ctrl.users"
+                        ng-click="ctrl.callUser(user)">
+                        <i class="icon" ng-class="{
+                            'ion-ios-book': user.role === 'teacher',
+                            'ion-android-contact': user.role === 'student'
+                        }"></i>
+                        {{user.name}}
+                    </a>
+                </div>
             </div>
 
             <div class="card" ng-if="ctrl.answerResult">
@@ -58,9 +111,44 @@
                 </div>
             </div>
 
+            <div class="card" ng-repeat="suggestion in ctrl.suggestions">
+                <div class="item item-avatar">
+                    <h2>{{suggestion.topic}}</h2>
+                </div>
+
+                <div class="item item-body">
+                    <img class="full-image" ng-src="{{suggestion.thumbnail}}">
+                    <p><b>{{suggestion.title}}</b></p>
+                    <p>
+                        {{suggestion.description}}
+                    </p>
+                </div>
+
+                <div class="item tabs tabs-secondary tabs-icon-left">
+                    <a class="tab-item" ng-click="ctrl.openLink(suggestion.url)">
+                        <i class="icon ion-link"></i>
+                        More detail
+                    </a>
+                </div>
+            </div>
+
             <div class="card" ng-if="ctrl.done">
                 <div class="item item-text-wrap info">
                     Looks like you are done with pop-quizzes! Have fun!
+                </div>
+                <div class="item item-text-wrap info"
+                    ng-if="ctrl.dataRewards">
+                    <p>
+                        Thanks for finishing quizzes! You are awesome so
+                        we decide to reward you with some AT&T Data Reward!
+                    </p>
+                    <p>
+                        Also note that you can also get additional rewards by clicking onto
+                        <i>More detail</i> on content posters.
+                    </p>
+                    <p>
+                        Current rewards: {{ctrl.dataRewards}} MB
+                    </p>
                 </div>
             </div>
       </ion-content>

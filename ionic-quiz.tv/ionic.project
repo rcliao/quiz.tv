@@ -1,4 +1,11 @@
 {
   "name": "ionic-quiz.tv",
-  "app_id": "56249421"
+  "app_id": "56249421",
+  "browsers": [
+    {
+      "platform": "android",
+      "browser": "crosswalk",
+      "version": "12.41.296.5"
+    }
+  ]
 }

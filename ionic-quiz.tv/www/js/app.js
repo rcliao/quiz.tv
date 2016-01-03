@@ -1,4 +1,8 @@
 var SERVER_URL = 'http://7b046cb3.ngrok.io';
+var projectAPIKey = 'DAK7b4967e33538456e80d13b87f3dd2919';
+var username = 'test';
+var password = 'atthackathon2016';
+var kandyDomain = 'quiztv.gmail.com';
 
 var socket = io.connect(SERVER_URL);
 
@@ -53,10 +57,99 @@ angular.module('quiz.tv.app', ['ionic'])
   });
 })
 
-.controller('QuestionCtrl', function($scope) {
+.controller('QuestionCtrl', function($scope, $http, $timeout, $ionicPopup) {
     var vm = this;
     vm.answerResult = false;
     vm.done = true;
+    vm.kandyReady = false;
+    vm.dataRewards = 0;
+
+    $timeout(function() {
+        kandy.setup({
+            // Containers for streaming elements.
+            remoteVideoContainer: document.getElementById('remote_call'),
+            localVideoContainer: document.getElementById('local_call'),
+            // Register listeners to call events.
+            listeners: {
+                callinitiated: onCallInitiated,
+                callincoming: onCallIncoming,
+                callestablished: onCallEstablished,
+                callended: onCallEnded
+            }
+        });
+        $scope.data = {};
+        // An elaborate, custom popup
+        var myPopup = $ionicPopup.show({
+            template: '<input type="text" ng-model="data.username">',
+            title: 'Simple user authentication',
+            subTitle: 'Sign in with username',
+            scope: $scope,
+            buttons: [
+                { text: 'Cancel' },
+                {
+                    text: '<b>Sign In</b>',
+                    type: 'button-positive',
+                    onTap: function(e) {
+                        console.log($scope.data.username);
+                        if (!$scope.data.username) {
+                            //don't allow the user to close unless he enters wifi password
+                            e.preventDefault();
+                        } else {
+                            return $scope.data.username;
+                        }
+                    }
+                }
+            ]
+        });
+
+        myPopup.then(function(res) {
+            kandy.login(projectAPIKey, res, password, function() {
+                console.log('successfully logged into Kandy');
+                vm.kandyReady = true;
+            }, function() {
+                console.log('failure while logging into kandy');
+            });
+        });
+    });
+
+    function onCallInitiated(call, callee) {
+        console.log('Call initialized');
+        vm.callId = call.getId();
+    }
+
+    function onCallIncoming(call) {
+        alert('Incoming call from ' + call.callNumber);
+        vm.calling = true;
+        vm.callId = call.getId();
+        vm.callIncoming = true;
+        $scope.$digest();
+    }
+
+    function onCallEstablished(call) {
+        vm.callIncoming = false;
+        vm.outCalling = true;
+        console.log('Call established');
+        $scope.$digest();
+    }
+
+    function onCallEnded (call) {
+        alert('Call ended');
+    }
+
+    vm.users = [
+        {
+            name: 'Teacher Liao',
+            role: 'teacher',
+            username: 'test',
+            password: 'atthackathon2016'
+        },
+        {
+            name: 'Jane Doe',
+            role: 'student',
+            username: 'test2',
+            password: 'atthackathon2016'
+        }
+    ];
 
     socket.on('post-question', function(question) {
         vm.done = false;
@@ -75,11 +168,88 @@ angular.module('quiz.tv.app', ['ionic'])
         vm.done = true;
         vm.answerResult = false;
         vm.currentQuestion = null;
+        // seek for content
+        vm.suggestions = [];
+        vm.dataRewards += 20;
+        $http.get('https://concept-insights-nodejs-quiztvinsight-2011.mybluemix.net/api/conceptualSearch?ids%5B%5D=%2Fgraphs%2Fwikipedia%2Fen-20120601%2Fconcepts%2FGeorge_W._Bush&limit=3&document_fields=%7B%22user_fields%22%3A1%7D')
+            .then(function(response) {
+                response.data.results.forEach(function(result) {
+                    vm.suggestions.push({
+                        topic: 'George W Bush',
+                        description: result.user_fields.description,
+                        url: result.user_fields.url,
+                        thumbnail: result.user_fields.thumbnail,
+                        title: result.user_fields.title
+                    });
+                });
+            });
+        $http.get('https://concept-insights-nodejs-quiztvinsight-2011.mybluemix.net/api/conceptualSearch?ids%5B%5D=%2Fgraphs%2Fwikipedia%2Fen-20120601%2Fconcepts%2FVenus&limit=3&document_fields=%7B%22user_fields%22%3A1%7D')
+            .then(function(response) {
+                response.data.results.forEach(function(result) {
+                    vm.suggestions.push({
+                        topic: 'Venus',
+                        description: result.user_fields.description,
+                        url: result.user_fields.url,
+                        thumbnail: result.user_fields.thumbnail,
+                        title: result.user_fields.title
+                    });
+                });
+            });
+        $http.get('https://concept-insights-nodejs-quiztvinsight-2011.mybluemix.net/api/conceptualSearch?ids%5B%5D=%2Fgraphs%2Fwikipedia%2Fen-20120601%2Fconcepts%2FMercury_(planet)&limit=3&document_fields=%7B%22user_fields%22%3A1%7D')
+            .then(function(response) {
+                response.data.results.forEach(function(result) {
+                    vm.suggestions.push({
+                        topic: 'Mercury',
+                        description: result.user_fields.description,
+                        url: result.user_fields.url,
+                        thumbnail: result.user_fields.thumbnail,
+                        title: result.user_fields.title
+                    });
+                });
+            });
+        $scope.$digest();
+    });
+
+    socket.on('choice-change', function(choice) {
+        vm.currentQuestion.choice = choice;
         $scope.$digest();
     });
 
     vm.selectAnswer = function(index) {
         vm.currentQuestion.choice = index;
+        socket.emit('choice-change', index);
+    };
+
+    vm.submitAnswer = function() {
         socket.emit('answer', vm.currentQuestion);
+    };
+
+    vm.openLink = function(link) {
+        vm.dataRewards += 10;
+        window.open(link, '_system', 'location=yes');
+    };
+
+    vm.callForHelp = function() {
+        vm.calling = true;
+    };
+
+    vm.callUser = function(user) {
+        if (vm.kandyReady) {
+            // Tell Kandy to make a call to callee.
+            kandy.call.makeCall(user.username + '@' + kandyDomain, true);
+        }
+    };
+
+    vm.pickUpCall = function() {
+        kandy.call.answerCall(vm.callId, true);
+    };
+
+    vm.endCall = function() {
+        kandy.call.endCall(vm.callId);
+        vm.calling = false;
+    };
+
+    vm.backToQuestions = function() {
+        vm.calling = false;
     };
 });

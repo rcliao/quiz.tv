@@ -53,6 +53,11 @@ function init () {
         updateContentPosters();
     });
 
+    socket.on('choice-change', function(choice) {
+        currentQuestion.choice = choice;
+        updateQuestion(currentQuestion);
+    });
+
     socket.on('answer-result', function(correct) {
         hideQuestion();
 
@@ -81,30 +86,39 @@ function keyHandler(e){
             break;
         case 49 : // 1
             window.currentQuestion.choice = 0;
+            socket.emit('choice-change', window.currentQuestion.choice);
             break;
         case 50 : // 2
             window.currentQuestion.choice = 1;
+            socket.emit('choice-change', window.currentQuestion.choice);
             break;
         case 51 : // 3
             window.currentQuestion.choice = 2;
+            socket.emit('choice-change', window.currentQuestion.choice);
             break;
         case 52 : // 4
             window.currentQuestion.choice = 3;
+            socket.emit('choice-change', window.currentQuestion.choice);
             break;
         case 53 : // 5
             window.currentQuestion.choice = 4;
+            socket.emit('choice-change', window.currentQuestion.choice);
             break;
         case 54 : // 6
             window.currentQuestion.choice = 5;
+            socket.emit('choice-change', window.currentQuestion.choice);
             break;
         case 55 : // 7
             window.currentQuestion.choice = 6;
+            socket.emit('choice-change', window.currentQuestion.choice);
             break;
         case 56 : // 8
             window.currentQuestion.choice = 7;
+            socket.emit('choice-change', window.currentQuestion.choice);
             break;
         case 57 : // 9
             window.currentQuestion.choice = 8;
+            socket.emit('choice-change', window.currentQuestion.choice);
             break;
         case 79 : // Info
             break;
@@ -148,6 +162,7 @@ function keyHandler(e){
         case 38: //up
             window.currentQuestion.choice --;
             window.currentQuestion.choice = (window.currentQuestion.choice >= 0) ? window.currentQuestion.choice : window.currentQuestion.answers.length - 1;
+            socket.emit('choice-change', window.currentQuestion.choice);
             break;
         case 39: //right
             window.contentPosterChoice ++;
@@ -159,6 +174,7 @@ function keyHandler(e){
         case 40: //down
             window.currentQuestion.choice ++;
             window.currentQuestion.choice = window.currentQuestion.choice % window.currentQuestion.answers.length;
+            socket.emit('choice-change', window.currentQuestion.choice);
             break;
         case 47: //back
             break;
@@ -277,7 +293,12 @@ function updateContentPosters () {
     var description = document.createElement('div');
     description.classList.add('description');
     img.src = 'george-w-bush.jpg';
-    description.innerHTML = 'Select this content poster card to watch more awesomeness.';
+    description.innerHTML = 'George W Bush';
+
+    var description2 = description.cloneNode(true);
+    description2.innerHTML = 'Venus';
+    var description3 = description.cloneNode(true);
+    description3.innerHTML = 'Mercury';
 
     var contentPoster2 = contentPoster.cloneNode(true);
     var contentPoster3 = contentPoster.cloneNode(true);
@@ -291,10 +312,10 @@ function updateContentPosters () {
     contentPoster.appendChild(description);
 
     contentPoster2.appendChild(img2);
-    contentPoster2.appendChild(description.cloneNode(true));
+    contentPoster2.appendChild(description2);
 
     contentPoster3.appendChild(img3);
-    contentPoster3.appendChild(description.cloneNode(true));
+    contentPoster3.appendChild(description3);
 
     switch (window.contentPosterChoice) {
         case 0:

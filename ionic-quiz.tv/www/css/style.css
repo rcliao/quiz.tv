@@ -11,3 +11,19 @@
 .item.choice {
     border-left: 3px solid #BBDEFB;
 }
+.item.choice.active {
+    border-left: 3px solid #69F0AE;
+}
+
+.video-container {
+    position: relative;
+    min-height: 7em;
+}
+
+.video-container #local_call {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    height: 5em;
+    width: 7em;
+}

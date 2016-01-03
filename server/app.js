@@ -187,5 +187,9 @@ io.on('connection', function(socket) {
                 request(setTopBoxIP + ':8080/tv/tune?major=' + channel);
             }
         });
-    })
+    });
+
+    socket.on('choice-change', function(choice) {
+        io.emit('choice-change', choice);
+    });
 });
