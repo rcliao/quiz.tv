@@ -57,11 +57,12 @@ body {
     -webkit-flex: 1 1 1em;
         -ms-flex: 1 1 1em;
             flex: 1 1 1em;
-    background-color: rgba(0, 0, 0, 0.7);
+    background-color: rgba(0, 0, 0, 0.9);
     margin: 0.1em;
     padding: 0.1em;
     padding-left: 0.5em;
     position: relative;
+    font-weight: lighter;
 }
 
 .answers .answer::before {
@@ -76,7 +77,9 @@ body {
 }
 
 .answers .answer.active {
-    border-left: 5px solid #64B5F6;
+    border-left: 5px solid #4CAF50;
+    color: #4CAF50;
+    font-weight: 600;
 }
 
 #feedback {

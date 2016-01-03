@@ -14,8 +14,12 @@ if (!!navigator.setWebSecurityEnabled){
     navigator.setWebSecurityEnabled(false);
 }
 
+// boostrap up the name space for quiz.tv
+window.quizTvApp = {};
+
 // called when the TV loads
 function init () {
+    // cache dom elements
     window.questionDescription = document.getElementById('question_description');
     window.answers = document.getElementById('answers');
     window.overlay = document.getElementById('overlay');
@@ -27,41 +31,22 @@ function init () {
     window.answerDom = document.createElement('div');
     answerDom.classList.add('answer');
 
-    window.countdown = 15;
+    hideOverlay();
 
-    window.countDownInterval = setInterval(function() {
-        if (window.countdown > 0) {
-            window.countdown --;
-        } else {
-            clearInterval(window.countDownInterval);
-        }
+    socket.on('post-question', function(data) {
+        startCountdown(15);
 
-        updateCountdown();
-    }, 1000);
+        window.currentQuestion = data;
 
-    window.currentQuestion = {
-        description: 'What is the president of United States at 2004?',
-        answers: [
-            {
-                description: 'Barack Obama'
-            },
-            {
-                description: 'George W. Bush'
-            },
-            {
-                description: 'Bill Clinton'
-            },
-            {
-                description: 'George H. W. Bush'
-            },
-            {
-                description: 'Not an answer'
-            }
-        ],
-        choice: 0
-    };
+        showOverlay();
+        showQuestion();
+        updateQuestion(currentQuestion);
+    });
 
-    updateQuestion(currentQuestion);
+    socket.on('finish-quiz', function() {
+        hideOverlay();
+        navigator.exit();
+    });
 }
 
 function keyHandler(e){
@@ -71,12 +56,18 @@ function keyHandler(e){
     //Fall through like it does below.
     switch(code){
         case 13: // Select / Enter
-            // to submit answer
-            window.currentQuestion = {
-                description: '',
-                answers: []
-            };
-            updateFeedback('Wrong.');
+            hideQuestion();
+            updateFeedback(checkQuestionChoice(window.currentQuestion) ? 'Woohoo, you got it right!' : 'Wrong. Try again.');
+
+            removeCountdown();
+            setTimeout(function() {
+                hideFeedback();
+                if (checkQuestionChoice(window.currentQuestion)) {
+                    socket.emit('next-question');
+                } else {
+                    socket.emit('same-question');
+                }
+            }, 3000);
             break;
         case 48 : // 0
             break;
@@ -180,6 +171,30 @@ window.onerror = function(errorMsg, url, lineNumber){
     return true;
 };
 
+function hideOverlay () {
+    window.overlay.style.display = 'none';
+}
+
+function showOverlay () {
+    window.overlay.style.display = '';
+}
+
+function removeCountdown () {
+    window.countdown = 0;
+}
+
+function hideQuestion () {
+    questionDom.style.display = 'none';
+}
+
+function showQuestion () {
+    questionDom.style.display = '';
+}
+
+function hideFeedback () {
+    window.feedbackDom.style.display = 'none';
+}
+
 /**
  *  To update the question using plain JavaScript
  */
@@ -208,6 +223,20 @@ function updateQuestion (question) {
     });
 }
 
+function startCountdown (countdown) {
+    window.countdown = countdown;
+
+    window.countDownInterval = setInterval(function() {
+        if (window.countdown > 0) {
+            window.countdown --;
+        } else {
+            clearInterval(window.countDownInterval);
+        }
+
+        updateCountdown();
+    }, 1000);
+}
+
 function updateCountdown () {
     if (window.countdown > 0) {
         window.countDownDom.innerText = window.countdown;
@@ -224,4 +253,8 @@ function updateFeedback (feedback) {
         window.feedbackDom.style.display = 'none';
         window.feedbackDescription.innerHTML = '';
     }
+}
+
+function checkQuestionChoice (question) {
+    return (question.choice === question.answer);
 }
