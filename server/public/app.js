@@ -23,30 +23,41 @@ function init () {
     window.questionDescription = document.getElementById('question_description');
     window.answers = document.getElementById('answers');
     window.overlay = document.getElementById('overlay');
-    window.countDownDom = document.getElementById('countdown');
     window.questionDom = document.getElementById('question');
     window.feedbackDom = document.getElementById('feedback');
     window.feedbackDescription = document.getElementById('feedback_description');
+    window.questionCount = document.getElementById('question_count');
+    window.summaryDom = document.getElementById('summary');
 
     window.answerDom = document.createElement('div');
     answerDom.classList.add('answer');
 
     hideOverlay();
+    hideSummary();
 
     socket.on('post-question', function(data) {
-        startCountdown(15);
+        hideFeedback();
 
         window.currentQuestion = data;
+        console.log(data);
 
         showOverlay();
         showQuestion();
-        updateQuestion(currentQuestion);
+        updateQuestion(window.currentQuestion);
     });
 
     socket.on('finish-quiz', function() {
-        hideOverlay();
-        navigator.exit();
+        window.currentQuestion = null;
+        hideFeedback();
+        showSummary();
+        updateContentPosters();
     });
+
+    socket.on('answer-result', function(correct) {
+        hideQuestion();
+
+        updateFeedback(correct ? 'Woohoo, you got it right!' : 'Wrong. Try again.');
+    })
 }
 
 function keyHandler(e){
@@ -56,18 +67,15 @@ function keyHandler(e){
     //Fall through like it does below.
     switch(code){
         case 13: // Select / Enter
-            hideQuestion();
-            updateFeedback(checkQuestionChoice(window.currentQuestion) ? 'Woohoo, you got it right!' : 'Wrong. Try again.');
-
-            removeCountdown();
-            setTimeout(function() {
-                hideFeedback();
-                if (checkQuestionChoice(window.currentQuestion)) {
-                    socket.emit('next-question');
+            if (window.currentQuestion && window.currentQuestion.description) {
+                socket.emit('answer', window.currentQuestion);
+            } else {
+                if (window.contentPosterChoice === 0) {
+                    socket.emit('change-channel', 269);
                 } else {
-                    socket.emit('same-question');
+                    socket.emit('change-channel', 278);
                 }
-            }, 3000);
+            }
             break;
         case 48 : // 0
             break;
@@ -127,6 +135,11 @@ function keyHandler(e){
         case 46 : // Back Trick play
             break;
         case 37: //left
+            window.contentPosterChoice --;
+            if (window.contentPosterChoice < 0) {
+                window.contentPosterChoice = 2;
+            }
+            updateContentPosters();
             break;
         case 33: //pageup channelUp
             break;
@@ -137,6 +150,11 @@ function keyHandler(e){
             window.currentQuestion.choice = (window.currentQuestion.choice >= 0) ? window.currentQuestion.choice : window.currentQuestion.answers.length - 1;
             break;
         case 39: //right
+            window.contentPosterChoice ++;
+            if (window.contentPosterChoice > 2) {
+                window.contentPosterChoice = 0;
+            }
+            updateContentPosters();
             break;
         case 40: //down
             window.currentQuestion.choice ++;
@@ -168,6 +186,7 @@ window.onerror = function(errorMsg, url, lineNumber){
     // Look for this console.log message in the logs
     // To access the logs use http://{STB_IP}/itv/getLogs
     console.error(errorMsg);
+    console.log(lineNumber);
     return true;
 };
 
@@ -177,10 +196,6 @@ function hideOverlay () {
 
 function showOverlay () {
     window.overlay.style.display = '';
-}
-
-function removeCountdown () {
-    window.countdown = 0;
 }
 
 function hideQuestion () {
@@ -206,6 +221,8 @@ function updateQuestion (question) {
         return;
     }
 
+    questionCount.innerHTML = question.index + '/' + 3;
+
     questionDescription.innerHTML = question.description;
 
     // remote all children
@@ -223,28 +240,6 @@ function updateQuestion (question) {
     });
 }
 
-function startCountdown (countdown) {
-    window.countdown = countdown;
-
-    window.countDownInterval = setInterval(function() {
-        if (window.countdown > 0) {
-            window.countdown --;
-        } else {
-            clearInterval(window.countDownInterval);
-        }
-
-        updateCountdown();
-    }, 1000);
-}
-
-function updateCountdown () {
-    if (window.countdown > 0) {
-        window.countDownDom.innerText = window.countdown;
-    } else {
-        window.countDownDom.innerHTML = '';
-    }
-}
-
 function updateFeedback (feedback) {
     if (feedback) {
         window.feedbackDom.style.display = '';
@@ -257,4 +252,63 @@ function updateFeedback (feedback) {
 
 function checkQuestionChoice (question) {
     return (question.choice === question.answer);
+}
+
+function hideSummary () {
+    summary.style.display = 'none';
+}
+
+function showSummary () {
+    summary.style.display = '';
+    window.contentPosterChoice = 0;
+}
+
+function updateContentPosters () {
+    document.getElementById('correct_answers')
+        .innerHTML = 'George W Bush, Venus and Mercury';
+
+    var posters = document.getElementById('content_posters');
+    posters.innerHTML = '';
+
+    var contentPoster = document.createElement('div');
+    contentPoster.classList.add('content-poster');
+    var img = document.createElement('img');
+    img.classList.add('content-poster.img');
+    var description = document.createElement('div');
+    description.classList.add('description');
+    img.src = 'george-w-bush.jpg';
+    description.innerHTML = 'Select this content poster card to watch more awesomeness.';
+
+    var contentPoster2 = contentPoster.cloneNode(true);
+    var contentPoster3 = contentPoster.cloneNode(true);
+    var img2 = img.cloneNode(true);
+    var img3 = img.cloneNode(true);
+
+    img2.src = 'planet-venus.jpg';
+    img3.src = 'mercury.jpeg';
+
+    contentPoster.appendChild(img);
+    contentPoster.appendChild(description);
+
+    contentPoster2.appendChild(img2);
+    contentPoster2.appendChild(description.cloneNode(true));
+
+    contentPoster3.appendChild(img3);
+    contentPoster3.appendChild(description.cloneNode(true));
+
+    switch (window.contentPosterChoice) {
+        case 0:
+            contentPoster.classList.add('active');
+            break;
+        case 1:
+            contentPoster2.classList.add('active');
+            break;
+        case 2:
+            contentPoster3.classList.add('active');
+            break;
+    }
+
+    posters.appendChild(contentPoster);
+    posters.appendChild(contentPoster2);
+    posters.appendChild(contentPoster3);
 }

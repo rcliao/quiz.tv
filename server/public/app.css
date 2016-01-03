@@ -30,6 +30,10 @@ body {
             align-items: center;
 }
 
+#question_count {
+    text-align: right;
+}
+
 #countdown {
     position: absolute;
     top: 0;
@@ -83,4 +87,33 @@ body {
 }
 
 #feedback {
+}
+
+.question {
+}
+
+#content_posters {
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+}
+
+.content-poster-img {
+    height: 5em;
+    width: auto;
+}
+
+.content-poster {
+    -webkit-box-flex: 1;
+    -webkit-flex: 1;
+        -ms-flex: 1;
+            flex: 1;
+    margin: 1em;
+    background-color: rgba(0, 0, 0, 0.6);
+}
+
+.content-poster.active {
+    border-left: 5px solid #4CAF50;
+    color: #4CAF50;
 }

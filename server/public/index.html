@@ -11,14 +11,22 @@
 
 <body onload="init()">
     <div class="overlay" id="overlay">
-        <div id="countdown"></div>
         <div class="question" id="question">
             <p class="description" id="question_description"></p>
+            <p class="question-count" id="question_count"></p>
             <div class="answers" id="answers">
             </div>
         </div>
         <div class="feedback" id="feedback">
             <p class="description" id="feedback_description"></p>
+        </div>
+        <div class="summary" id="summary">
+            <p>
+                Based on the answers provided: [<span id="correct_answers"></span>] <br>
+                We suggest to find out more information from below:
+            </p>
+            <div class="content-posters" id="content_posters">
+            </div>
         </div>
     </div>
 </body>
