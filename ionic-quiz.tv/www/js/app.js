@@ -1,9 +1,8 @@
-// Ionic Starter App
+var SERVER_URL = 'http://7b046cb3.ngrok.io';
 
-// angular.module is a global place for creating, registering and retrieving Angular modules
-// 'starter' is the name of this angular module example (also set in a <body> attribute in index.html)
-// the 2nd parameter is an array of 'requires'
-angular.module('starter', ['ionic'])
+var socket = io.connect(SERVER_URL);
+
+angular.module('quiz.tv.app', ['ionic'])
 
 .run(function($ionicPlatform) {
   $ionicPlatform.ready(function() {
@@ -30,8 +29,6 @@ angular.module('starter', ['ionic'])
     });
 
     push.register(function(token) {
-      alert("Device token: " + token.token);
-
       // kick off the platform web client
       Ionic.io();
 
@@ -55,3 +52,34 @@ angular.module('starter', ['ionic'])
     });
   });
 })
+
+.controller('QuestionCtrl', function($scope) {
+    var vm = this;
+    vm.answerResult = false;
+    vm.done = true;
+
+    socket.on('post-question', function(question) {
+        vm.done = false;
+        vm.answerResult = false;
+        vm.currentQuestion = question;
+        $scope.$digest();
+    });
+
+    socket.on('answer-result', function(correct) {
+        vm.answerResult = true;
+        vm.correct = correct;
+        $scope.$digest();
+    });
+
+    socket.on('finish-quiz', function() {
+        vm.done = true;
+        vm.answerResult = false;
+        vm.currentQuestion = null;
+        $scope.$digest();
+    });
+
+    vm.selectAnswer = function(index) {
+        vm.currentQuestion.choice = index;
+        socket.emit('answer', vm.currentQuestion);
+    };
+});

@@ -1,1 +1,13 @@
 /* Empty. Add your own CSS if you like */
+.item.correct {
+    border-left: 3px solid #69F0AE;
+}
+.item.failure {
+    border-left: 3px solid #FF5252;
+}
+.item.info {
+    border-left: 3px solid #448AFF;
+}
+.item.choice {
+    border-left: 3px solid #BBDEFB;
+}
